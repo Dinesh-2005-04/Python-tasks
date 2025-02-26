@@ -41,7 +41,8 @@ print(f"no worries its fine as you are fresher",
 "everyone starts at somewhere,,just start now..")
 
 if user_data["Age"]<25 and user_data["Experience"]=="no":
-print("you are young and have great journey ahed in programming..")
+    print("you are young and have great journey ahed in programming..")
+
 if user_data["Favourite Launguage"]=="java" or \
  user_data["Favourite Launguage"]=="python":
-print("you are choosen a graet launguae")
+    print("you are choosen a graet launguae")
