@@ -1,36 +1,45 @@
 
 launagues=["python","java","c","c++"]
 user_data={}
+
 name=input("enter your name: ")
 age=int(input("enter your age: "))
 fav_lag=input("enter your favorite launguage: ")
 experience=input("do you have any experience (yes/no): ")
+
 user_data["Name"]=name
 user_data["Age"]=age
 user_data["Favourite Launguage"]=fav_lag
 user_data["Experience"]=experience
+
 if age<=18:
  category="Teenager"
 elif 18<=age<=30:
  category="Young adult"
 else:
  category="Adult"
+
 user_data["category"]=category
+
 if fav_lag in launagues:
-print(f"Nice choice, {fav_lag} is very poular launague..")
+    print(f"Nice choice, {fav_lag} is very poular launague..")
 else:
-print("Thats great choice..!")
+    print("Thats great choice..!")
+
 if experience.lower()=="yes":
- years=int(input("how many years experience do you have..? "))
-if years < 2:
-print("you are at beginner level..")
-elif 2< years <5:
-print(" you are at intermediate level ")
-else:
-print(" you are expert , wishing a great success")
+   years=int(input("how many years experience do you have..? "))
+
+   if years < 2:
+     print("you are at beginner level..")
+   elif 2< years <5:
+     print(" you are at intermediate level ")
+   else:
+     print(" you are expert , wishing a great success")
+
 else:
 print(f"no worries its fine as you are fresher", 
 "everyone starts at somewhere,,just start now..")
+
 if user_data["Age"]<25 and user_data["Experience"]=="no":
 print("you are young and have great journey ahed in programming..")
 if user_data["Favourite Launguage"]=="java" or \
