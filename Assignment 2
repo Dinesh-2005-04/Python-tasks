@@ -1,0 +1,110 @@
+import smtplib
+import json
+import requests
+from email.message import EmailMessage
+url="http://demo7932818.mockable.io/Assignement"
+def get_items():
+    responce=requests.get(url)
+    # print("raw responce" , responce.text)
+    if responce.status_code==200:
+        try:
+            data=responce.json()
+            # print("parsed json",data)
+            if "items" not in data:
+                print("key items not found in jsons")
+                return[]
+            for item in data["items"]:
+                if "price" in item:
+                    item["Price"]=item.pop("price")
+                elif "Price" in item:
+                    pass
+            return data["items"]
+                
+        except json.JSONDecodeError:
+            print("API returned invalid json format")
+            return[]
+    else:
+        print(f"API request failed with staus {responce.status_code}")
+        return[]
+    
+items=get_items()
+print("Avalible iems:")
+for index,item in enumerate(items,1):
+    print(f"{index}. {item['name']} - {item['Price']} rs")
+
+cart=[]
+while(True):
+    try:
+        print("enter 0 to exit")
+        choice=int(input("Enter your choice : "))
+        
+        if choice==0:
+            print("Exiting...")
+            break
+        if choice < 1 or choice >len(items):
+            continue
+        quantity=int(input("Enter the quantity(kg): "))
+        selected_item=items[choice-1]
+        cart.append({"name": selected_item["name"] , "Price": selected_item["Price"], "quantity" : quantity})
+        print(f"{selected_item['name']} added successfully , please select next one")
+    except ValueError:
+        print("invalid input")
+
+
+gst_rate=18
+sub_total=0
+gst_total=0
+grand_total=0
+bill_content="Bill summary"
+
+for item in cart:
+    item_total=item["Price"]*item["quantity"]
+    item_gst=(item_total*gst_rate)/100
+    item_final_rate=item_total+item_gst
+
+    bill_content += (f"{item['name']} x {item['quantity']} kg= {item_total} + GST({item_gst: .2f}) rs = {item_final_rate: .2f} rs")
+    print(f"{item['name']} x {item['quantity']} kg= {item_total} + GST({item_gst: .2f}) rs = {item_final_rate: .2f} rs")
+    
+    sub_total += item_total
+    gst_total += item_gst
+    grand_total= sub_total+ gst_total 
+
+print(f"Subtotal= {sub_total}")
+print(f"Total GST (18%)= {gst_total: .2f}")
+print(f"Grand total = {grand_total: .2f}")
+
+
+def send_bill():
+    try:
+        with open("bill.txt","w") as file:
+            file.write(bill_content)
+
+        with open("bill.txt","r") as f:
+            bill_content_read=f.read()
+         
+    except:
+        print("file not found")
+    
+    sender_email="dineshthatipamula5@gmail.com"
+    sender_password="fsii fjmp hiuf mecc"
+    receiver_email=input("Enter your email to receive your bill : ")
+
+    msg=EmailMessage()
+    msg['subject']="your supermarket bill"
+    msg['from']=sender_email
+    msg["To"]=receiver_email
+    msg.set_content("Hello this is your supermarket bill ,, Thank you for shopping")
+   
+    try:
+        with open("bill.txt","rb") as file:
+            msg.add_attachment(file.read(),maintype="text",subtype="plain",filename="bill.txt")
+        s= smtplib.SMTP("smtp.gmail.com",587)
+        s.starttls()
+        s.login(sender_email,"fsii fjmp hiuf mecc")
+        s.sendmail(sender_email,receiver_email,msg.as_string())
+        s.quit()
+        print("mail sent successfully")
+    except Exception as e:
+        print("mail not sent because",e)
+
+send_bill()
