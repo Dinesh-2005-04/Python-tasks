@@ -1,0 +1,109 @@
+rooms = [
+            {"room_no":101, "type": "Single" , "price" : 1000,"avalible":True},
+            {"room_no":102, "type": "Double" , "price" : 2000,"avalible":True},
+            {"room_no":103, "type": "Suite" , "price" : 3000,"avalible":True},
+            {"room_no":104, "type": "Single" , "price" : 1000,"avalible":True},
+            {"room_no":105, "type": "Double" , "price" : 2000,"avalible":True},
+            {"room_no":106, "type": "Suits" , "price" : 3000,"avalible":True},
+            {"room_no":107, "type": "Single" , "price" : 1000,"avalible":True},
+            {"room_no":108, "type": "Double" , "price" : 2000,"avalible":True},
+            {"room_no":109, "type": "Suite" , "price" : 3000,"avalible":True},
+          
+ ]
+bookings={}
+def show_avalible_rooms():
+    print(" Avalible rooms ")
+    print("-----------------------------")
+    for room in rooms:
+        if room["avalible"]:
+            print(f"Room {room['room_no']} - {room['type']}-{room['price']} per night")
+            print("----------------------------------")
+
+def book_room():
+    name = input("enter your name ; ")
+    if name=="":
+        print("invalid name , please enter a valid name...")
+        return 
+    show_avalible_rooms()
+
+    room_no=input("enter the room number you want to book: ")
+    if room_no.isdigit():
+        room_no=int(room_no)
+    else:
+        print("invalid input enter a valid room number...")
+        return
+    for room in rooms:
+        if room["room_no"]==room_no and room["avalible"]:
+            bookings[name]=room_no
+            room["avlible"]=False
+            print("Room ",room_no, "booked successfully for" , name ,"!")
+            return
+    print("sorry this room is not valible so, dont exist.")
+
+def veiw_booking():
+    name=input("enter your name to check your booking: ")
+    if name=="":
+        print("invalid name , please ebnter a valid name")
+        return
+
+    if name in bookings:
+        room_no=bookings[name]
+        print(name," you have booked the room",room_no)
+    else:
+        print("no booking found by this name")
+
+def cancel_booking():
+    name=input("enter your name to cancel your boking..")
+    if name=="":
+        print("invalid name , please enter valid name")
+        return
+    if name in bookings:
+        room_no=bookings[name]
+
+        for room in rooms:
+            if room["room_no"]==room_no:
+                room["avalible"]=True
+                break
+        del bookings[name]
+        print("your booking for room" , room_no , "has been cancelled.")
+
+    else:
+        print("no booking found under this name")
+
+def show_all_bookings():
+    if bookings=={}:
+        print("no bookings yet")
+        return
+
+    print("All bookings: ")
+    print("-----------------------------")
+    for name in bookings:
+        room_no=bookings[name]
+        print(name, "room no" , room_no)
+    print("------------------------------")
+
+while True:
+    print("***Welcome to Hotel Booking System***")
+    print("1.view avalible rooms")
+    print("2.book a room")
+    print("3.view my booking")
+    print("4.cancel my booking")
+    print("5.show all bookings")
+    print("6.Exit")
+
+    choice = input("enter your chice(1-6): ")
+    if choice =="1":
+        show_avalible_rooms()
+    elif choice=="2":
+        book_room()
+    elif choice=="3":
+        veiw_booking()
+    elif choice=="4":
+        cancel_booking()
+    elif choice=="5":
+        show_all_bookings()
+    elif choice=="6":
+        print("Thank you for using Hotel Booking System , have a great day..!")
+        break
+    else:
+        print("invalid choice please enter a valid choice (1-6)")
