@@ -1,0 +1,139 @@
+import mysql.connector
+from decimal import Decimal
+class Database:
+    def __init__(self):
+        self.conn=mysql.connector.connect(
+            host="127.0.0.1",
+            user="root",
+            password="12345",
+            database="MovieBooking"
+        )
+        self.cursor=self.conn.cursor()
+
+    def execute_query(self,query,values=None):
+        self.cursor.execute(query,values) if values else self.cursor.execute(query) 
+        self.conn.commit()
+    def fetch_data(self,query,values=None):
+        self.cursor.execute(query,values) if values else self.cursor.execute(query)
+        return self.cursor.fetchall()
+    
+class Movie(Database):
+    def display_movies(self):
+        query="select * from movies"
+        movies=self.fetch_data(query)
+
+        print("Avalible Movies")
+        for movie in movies:
+            print(f"{movie[0]}.{movie[1]}")
+
+    def get_movie_name(self,movie_id):
+        query="select name from movies where id=%s"
+        result=self.fetch_data(query,(movie_id,))
+        return result[0][0] if result else None
+    
+class Show(Movie):
+        def display_showtimes(self,movie_id):
+             query="select * from shows where movie_id=%s"
+             shows=self.fetch_data(query,(movie_id,))
+             if not shows:
+                 print("no showtimes avalible for this movie.")
+                 return None
+             print("Avalible showtimes: ")
+             for show in shows:
+                 print(f"{show[0]}.){show[2]} ! price: {show[3]} rs")
+             return shows
+
+        def get_avalible_seats(self,show_id):
+             query="select avalible_seats from shows where id=%s"
+             result=self.fetch_data(query,(show_id,))
+             return result[0][0] if result else 0
+        
+class Booking(Show):
+    def book_ticket(self):
+        self.display_movies()
+        movie_id=input("select a movie id: ")
+        if not movie_id.isdigit():
+            print("invalid input")
+            return
+        movie_id=int(movie_id)
+        movie_name=self.get_movie_name(movie_id)
+        if not movie_name:
+            print("invalid movie id , please choose correct one")
+            return
+        showtimes=self.display_showtimes(movie_id)
+        if not showtimes:
+            return
+        show_id=None
+        showtime=None
+        price=0
+        show_id_input=input("select a show id: ")
+        if show_id_input.isdigit():
+            show_id=int(show_id_input)
+            for show in showtimes:
+                if show[0]==show_id:
+                    showtime=show[2]
+                    price=show[3]
+                    break
+        if showtime is None or show_id is None:
+            print("invalid showtime selection ")
+            return
+        avalible_seats=self.get_avalible_seats(show_id)
+        print(f"Avalible seats: {avalible_seats}")
+        if avalible_seats==0:
+            print("no avalible seats")
+            return
+        seats=input("how many seats you want to book: ")
+        if not seats.isdigit() or int(seats)<=0 or int(seats) > avalible_seats:
+            print("invalid seat count , please select seats out of remaining and enter number only..")
+            return
+        seats=int(seats)
+        total_price=seats*price
+        gst=total_price*Decimal(0.18)
+        final_amount=round(total_price + gst,2)
+
+        print(f"total price : {total_price:.2f}")
+        print(f"gst(18%): {gst:.2f} rs")
+        print(f"final amount: {final_amount:.2f}")
+        while True:
+            name=input("Enter your name: ").strip()
+            if name.isalpha():
+                break
+            print("invalid name , name must contains letters only")
+        while True:
+            mobile=input("Enter your mobile number: ").strip()
+            if len(mobile)==10 and mobile.isdigit():
+                break
+            print("invalid mobile number , it must number having 10 digits only.")
+
+        email=input("Enter your email: ").strip()
+        if not name or not mobile or not email:
+            print("invalid deatils")
+            return
+    
+        insert_query="insert into bookings (user_name,mobile,email,movie_name,showtime,seats,total_price) " \
+        "values (%s,%s,%s,%s,%s,%s,%s)"
+        try:
+            self.execute_query(insert_query,(name,mobile,email,movie_name,showtime,seats,final_amount))
+        except Exception as e:
+            print("error inserting into database",e)
+        update_query="update shows set avalible_seats=avalible_seats-%s where id = %s"
+        self.execute_query(update_query,(seats,show_id))
+        print(f"Booking successfull ! {seats} seats are booked for {movie_name} at {showtime}. Thank you")
+
+booking_system=Booking()
+while(True):
+    print("Wecome to movie ticket booking")
+    print("1.view avalible movies")
+    print("2.book a ticket")
+    print("3.exit")
+
+    choice = int(input("Enter your choice: "))
+    if choice==1:
+        booking_system.display_movies()
+    elif choice==2:
+        booking_system.book_ticket()
+    elif choice==3:
+        print("thank you for using movie ticket booking..")
+        break
+    else:
+        print("invalid choice please enter a valid choice.")
