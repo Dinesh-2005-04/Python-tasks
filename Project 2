@@ -1,0 +1,108 @@
+import smtplib
+import json
+import requests
+import mysql.connector
+
+mydb=mysql.connector.connect(
+
+    host="127.0.0.1",
+    user="root",
+    password="12345",
+    database="supermarket"
+)
+cursor=mydb.cursor()
+url="http://demo7932818.mockable.io/Assignement"
+def get_items():
+    responce=requests.get(url)
+    if responce.status_code==200:
+        try:
+            data=responce.json()
+            if "items" not in data:
+                print("key items not found in jsons")
+                return[]
+            for item in data["items"]:
+                if "price" in item:
+                    item["Price"]=item.pop("price")
+                elif "Price" in item:
+                    pass
+            return data["items"]
+                
+        except json.JSONDecodeError:
+            print("API returned invalid json format")
+            return[]
+    else:
+        print(f"API request failed with staus {responce.status_code}")
+        return[]
+    
+items=get_items()
+print("Avalible iems:")
+for index,item in enumerate(items,1):
+    print(f"{index}. {item['name']} - {item['Price']} rs")
+
+cart=[]
+while(True):
+    try:
+        print("enter 0 to exit")
+        choice=int(input("Enter your choice : "))
+        
+        if choice==0:
+            print("Exiting...")
+            break
+        elif choice < 1 or choice >len(items):
+            print("please enter 1 to 4 only")
+            continue
+        quantity=int(input("Enter the quantity(kg): "))
+        selected_item=items[choice-1]
+        cart.append({"name": selected_item["name"] , "Price": selected_item["Price"], "quantity" : quantity})
+        print(f"{selected_item['name']} added successfully , please select next one")
+      
+    except ValueError:
+        print("invalid input")
+
+
+gst_rate=18
+subtotal=0
+gst_total=0
+grand_total=0
+bill_content="Bill summary"
+
+for item in cart:
+    item_total=item["Price"]*item["quantity"]
+    item_gst=(item_total*gst_rate)/100
+    item_final_rate=item_total+item_gst
+
+    bill_content += (f"{item['name']} x {item['quantity']} kg= {item_total} + GST({item_gst: .2f}) rs = {item_final_rate: .2f} rs")
+    print(f"{item['name']} x {item['quantity']} kg= {item_total} + GST({item_gst: .2f}) rs = {item_final_rate: .2f} rs")
+    
+    subtotal += item_total
+    gst_total += item_gst
+    grand_total= subtotal+ gst_total 
+
+name=input("Enter your name: ")
+email_id=input("Enter your email: ")
+
+cursor.execute("select user_id from users where email_id= %s", (email_id,))
+user=cursor.fetchone()
+
+if not user:
+    cursor.execute("insert into users(name,email_id) values (%s,%s)" , (name,email_id))
+    mydb.commit() 
+    user_id=cursor.lastrowid
+    print("user registered successfully")
+else:
+    user_id=user[0]
+    print("welcome back")
+
+cursor.execute("insert into orders(user_id,subtotal,gst_total,grand_total) values(%s,%s,%s,%s)", (user_id,subtotal,gst_total,grand_total))
+order_id=cursor.lastrowid
+
+for item in cart:
+    cursor.execute("insert into order_items(order_id,item_name,quantity,price) values (%s,%s,%s,%s)", 
+                   (order_id,item["name"],item["quantity"], item["Price"]))
+mydb.commit()
+ 
+print("order placed successfully")
+
+print(f"Subtotal= {subtotal}")
+print(f"Total GST (18%)= {gst_total: .2f}")
+print(f"Grand total = {grand_total: .2f}")
